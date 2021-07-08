@@ -33,17 +33,18 @@ import           Text.Printf         (printf)
 {-# INLINABLE mkValidator #-}
 mkValidator :: Data -> Data -> Data -> ()
 mkValidator _ r _
-    | r == I 42 = ()
-    | otherwise = traceError "wrong redeemer"
+  | r == I 42 = ()
+  | otherwise = traceError "Wrong redeemer!"
 
 validator :: Validator
-validator = mkValidatorScript $$(PlutusTx.compile [|| mkValidator ||])
+validator = mkValidatorScript $$(PlutusTx.compile [||mkValidator||])
 
 valHash :: Ledger.ValidatorHash
 valHash = Scripts.validatorHash validator
 
 scrAddress :: Ledger.Address
 scrAddress = scriptAddress validator
+
 
 type GiftSchema =
             Endpoint "give" Integer
@@ -72,7 +73,7 @@ endpoints :: Contract () GiftSchema Text ()
 endpoints = (give' `select` grab') >> endpoints
   where
     give' = endpoint @"give" >>= give
-    grab' = endpoint @"grab" >>= grab
+    grab' = endpoint @"grab" >>=  grab
 
 mkSchemaDefinitions ''GiftSchema
 
