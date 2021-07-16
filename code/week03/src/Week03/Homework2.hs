@@ -36,15 +36,40 @@ import           Text.Printf          (printf)
 
 {-# INLINABLE mkValidator #-}
 mkValidator :: PubKeyHash -> POSIXTime -> () -> ScriptContext -> Bool
-mkValidator _ _ _ _ = False -- FIX ME!
+mkValidator p dat () ctx = traceIfFalse "beneficiary's signature missing" signedByBeneficiary &&
+                           traceIfFalse "deadline not reached" deadlineReached
+  where
+    info :: TxInfo
+    info = scriptContextTxInfo ctx
+
+    signedByBeneficiary :: Bool
+    signedByBeneficiary = txSignedBy info $ beneficiary p
+
+    deadlineReached :: Bool
+    deadlineReached = contains (from $ deadline dat) $ txInfoValidRange info
 
 data Vesting
 instance Scripts.ValidatorTypes Vesting where
     type instance DatumType Vesting = POSIXTime
     type instance RedeemerType Vesting = ()
 
+-- The syntax of a type is compiled into a syntax of something of type compiled code a
+-- Generates Haskell code from Plutus Haskell code at compile time
+-- "Exp Int" is a piece of code that represents an Int
+-- mkValidator is a Haskell function it's not code
+-- [|| mkValidator ||] uses the oxford brackets to return the underlaying syntax tree for the mkValidator function
+-- "PlutusTx.compile [|| mkValidator ||]" compiles this syntax tree and returns the Plutus Core syntax tree for it.
+-- But "Scripts.mkTypedValidator" doesn't expect a syntax but an actual script
+-- The $$ is a so called splice. It takes a syntax tree and splices it into the source code at that point
+-- Then the "Scripts.mkTypedValidator" takes this and turns it into a validator
+-- I guess this validator is then a plain Haskell function way of expressing Plutus Core
+
 typedValidator :: PubKeyHash -> Scripts.TypedValidator Vesting
-typedValidator = undefined -- IMPLEMENT ME!
+typedValidator p = Scripts.mkTypedValidator @Vesting
+    ($$(PlutusTx.compile [|| mkValidator ||]) `PlutusTx.applyCode` PlutusTx.liftCode p)
+    $$(PlutusTx.compile [|| wrap ||])
+  where
+    wrap = Scripts.wrapValidator @POSIXTime @()
 
 validator :: PubKeyHash -> Validator
 validator = undefined -- IMPLEMENT ME!
