@@ -14,7 +14,7 @@ foo x y z = case readMaybe x of
 
 bindMaybe :: Maybe a -> (a -> Maybe b) -> Maybe b
 bindMaybe Nothing  _ = Nothing
-bindMaybe (Just x) f = f x
+bindMaybe (Just x) f = f x -- if the first parameter is not Nothing then execute the function parameter
 
 foo' :: String -> String -> String -> Maybe Int
 foo' x y z = readMaybe x `bindMaybe` \k ->
