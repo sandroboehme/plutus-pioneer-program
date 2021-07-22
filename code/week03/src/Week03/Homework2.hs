@@ -43,15 +43,18 @@ mkValidator p dat () ctx = traceIfFalse "beneficiary's signature missing" signed
     info = scriptContextTxInfo ctx
 
     signedByBeneficiary :: Bool
-    signedByBeneficiary = txSignedBy info $ beneficiary p
+    signedByBeneficiary = txSignedBy info $ p
 
     deadlineReached :: Bool
-    deadlineReached = contains (from $ deadline dat) $ txInfoValidRange info
+    deadlineReached = contains (from dat) $ txInfoValidRange info
 
 data Vesting
 instance Scripts.ValidatorTypes Vesting where
     type instance DatumType Vesting = POSIXTime
     type instance RedeemerType Vesting = ()
+
+-- I guess this is not needed as there is already a Lift instance for the PubKeyHash
+-- PlutusTx.makeLift ''PubKeyHash
 
 -- The syntax of a type is compiled into a syntax of something of type compiled code a
 -- Generates Haskell code from Plutus Haskell code at compile time
@@ -64,18 +67,33 @@ instance Scripts.ValidatorTypes Vesting where
 -- Then the "Scripts.mkTypedValidator" takes this and turns it into a validator
 -- I guess this validator is then a plain Haskell function way of expressing Plutus Core
 
+-- "mkValidator p" would return the partially applied function with the missing params:
+-- datum, redeemer and context
 typedValidator :: PubKeyHash -> Scripts.TypedValidator Vesting
+-- The p is not known at compile time but only at runtime when the actual endpoint is invoked
+-- But template Haskell needs to know all the types inline at compile time.
+-- "mkValidator p" would have the right type
+-- <asdf> is not a Haskell function but a Plutus Core function
 typedValidator p = Scripts.mkTypedValidator @Vesting
+    -- "`PlutusTx.applyCode` PlutusTx.liftCode p" is Plutus Core code that compiles p
+    -- into a syntax tree. This works as p is not arbitrary Haskell code with function types
+    -- but only data or a data-like type. In this cases instances of the "Lift" class are available
+    -- to be used as a parameter for "liftCode".
+    -- "liftCode" creates "CompiledCode" for p which should be the Plutus Core syntax tree.
+    -- "applyCode" should apply the mkValidator syntax tree to the one from the lift code.
     ($$(PlutusTx.compile [|| mkValidator ||]) `PlutusTx.applyCode` PlutusTx.liftCode p)
     $$(PlutusTx.compile [|| wrap ||])
   where
     wrap = Scripts.wrapValidator @POSIXTime @()
 
+-- untyped validated based on the typed validator
 validator :: PubKeyHash -> Validator
-validator = undefined -- IMPLEMENT ME!
+validator = Scripts.validatorScript . typedValidator
+-- the more explicit version without function composition looks like this:
+-- validator p = Scripts.validatorScript $ typedValidator p
 
 scrAddress :: PubKeyHash -> Ledger.Address
-scrAddress = undefined -- IMPLEMENT ME!
+scrAddress = scriptAddress . validator
 
 data GiveParams = GiveParams
     { gpBeneficiary :: !PubKeyHash
