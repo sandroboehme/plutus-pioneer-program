@@ -33,17 +33,24 @@ payContract = do
     Contract.logInfo pp
     let tx = mustPayToPubKey (ppRecipient pp) $ lovelaceValueOf $ ppLovelace pp
     void $ submitTx tx
-    payContractErrorHandled
+    -- payContractErrorHandled
 
 payContractErrorHandled :: Contract () PaySchema Text ()
 payContractErrorHandled = do
-    Contract.logInfo @String "hello from the myContract2"
+    Contract.logInfo @String "First call of payContractErrorHandled"
     Contract.handleError
     -- this is the handle func that gets error messages of type e
     -- the `Contract.logError` function returns a contract with error messages of e'
       (\err -> Contract.logError $ "caught error: " ++ unpack err)
       payContract -- the contract I want to handle errors for. That contract has error messages of type e
-    payContractErrorHandled
+    -- payContractErrorHandled
+    Contract.logInfo @String "Second call of payContractErrorHandled"
+    Contract.handleError
+    -- this is the handle func that gets error messages of type e
+    -- the `Contract.logError` function returns a contract with error messages of e'
+      (\err -> Contract.logError $ "caught error: " ++ unpack err)
+      payContract -- the contract I want to handle errors for. That contract has error messages of type e
+    -- payContractErrorHandled
 
 -- A trace that invokes the pay endpoint of payContract on Wallet 1 twice, each time with Wallet 2 as
 -- recipient, but with amounts given by the two arguments. There should be a delay of one slot
