@@ -14,12 +14,20 @@ import Plutus.Trace.Emulator      as Emulator
 import Wallet.Emulator.Wallet
 
 -- Contract w s e a
+-- Contract
+-- w=observable output
+-- s=endpoints
+-- e=error messages
+-- a=result
+
 -- EmulatorTrace a
 
 myContract1 :: Contract () Empty Text ()
 myContract1 = do
     void $ Contract.throwError "BOOM!"
     Contract.logInfo @String "hello from the contract"
+    -- @String is the syntax enabled by type applications.
+    -- It means: Use this logInfo for type "String"
 
 myTrace1 :: EmulatorTrace ()
 myTrace1 = void $ activateContractWallet (Wallet 1) myContract1
@@ -29,8 +37,10 @@ test1 = runEmulatorTraceIO myTrace1
 
 myContract2 :: Contract () Empty Void ()
 myContract2 = Contract.handleError
+  -- this is the handle func that gets error messages of type e
+  -- the `Contract.logError` function returns a contract with error messages of e'
     (\err -> Contract.logError $ "caught: " ++ unpack err)
-    myContract1
+    myContract1 -- the contract I want to handle errors for. That contract has error messages of type e
 
 myTrace2 :: EmulatorTrace ()
 myTrace2 = void $ activateContractWallet (Wallet 1) myContract2
