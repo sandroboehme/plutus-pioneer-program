@@ -5,7 +5,7 @@
 # in the plutus folder
 # after $>nix-shell
 
-cd plutus-pab
+cd plutus/plutus-pab
 plutus-pab-generate-purs
 cd ../plutus-playground-server
 plutus-playground-generate-purs

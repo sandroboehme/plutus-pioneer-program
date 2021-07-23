@@ -17,4 +17,5 @@ open .
 
 say build finished
 
+nix-shell
 # Continue here: https://docs.plutus-community.com/docs/setup/MacOS.html

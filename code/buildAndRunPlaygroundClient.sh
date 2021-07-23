@@ -5,5 +5,5 @@
 # in the plutus folder
 # after $>nix-shell
 
-cd plutus-playground-client
+cd plutus/plutus-playground-client
 npm run start
