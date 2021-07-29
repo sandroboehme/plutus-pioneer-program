@@ -10,7 +10,7 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE TypeOperators       #-}
 
-module Week05.Solution1 where
+module Week05.Homework1 where
 
 import           Control.Monad              hiding (fmap)
 import           Control.Monad.Freer.Extras as Extras
@@ -39,13 +39,28 @@ import           Wallet.Emulator.Wallet
 -- This policy should only allow minting (or burning) of tokens if the owner of the specified PubKeyHash
 -- has signed the transaction and if the specified deadline has not passed.
 mkPolicy :: PubKeyHash -> POSIXTime -> () -> ScriptContext -> Bool
-mkPolicy pkh deadline () ctx = True -- FIX ME!
+mkPolicy pkh deadline () ctx =  traceIfFalse "The signature of the owner is missing." signedByOwner &&
+                                traceIfFalse "The deadline has passed already." deadlineNotReached
+  where
+    info :: TxInfo
+    info = scriptContextTxInfo ctx
+
+    signedByOwner :: Bool
+    signedByOwner = txSignedBy info $ pkh
+
+    deadlineNotReached :: Bool
+    deadlineNotReached = not $ contains (from $ deadline) $ txInfoValidRange info
 
 policy :: PubKeyHash -> POSIXTime -> Scripts.MintingPolicy
-policy pkh deadline = undefined -- IMPLEMENT ME!
+policy pkh deadline = mkMintingPolicyScript $
+    $$(PlutusTx.compile [|| \pkh' deadline' -> Scripts.wrapMintingPolicy $ mkPolicy pkh' deadline' ||])
+    `PlutusTx.applyCode`
+    PlutusTx.liftCode pkh
+    `PlutusTx.applyCode`
+    PlutusTx.liftCode deadline
 
 curSymbol :: PubKeyHash -> POSIXTime -> CurrencySymbol
-curSymbol pkh deadline = undefined -- IMPLEMENT ME!
+curSymbol pkh deadline = scriptCurrencySymbol $ policy pkh deadline
 
 data MintParams = MintParams
     { mpTokenName :: !TokenName
@@ -65,7 +80,8 @@ mint mp = do
         else do
             let val     = Value.singleton (curSymbol pkh deadline) (mpTokenName mp) (mpAmount mp)
                 lookups = Constraints.mintingPolicy $ policy pkh deadline
-                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to deadline)
+--                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to deadline)
+                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to $ now + 5000)
             ledgerTx <- submitTxConstraintsWith @Void lookups tx
             void $ awaitTxConfirmed $ txId ledgerTx
             Contract.logInfo @String $ printf "forged %s" (show val)
