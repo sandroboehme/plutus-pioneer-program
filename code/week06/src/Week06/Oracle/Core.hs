@@ -68,9 +68,10 @@ oracleAsset oracle = AssetClass (oSymbol oracle, oracleTokenName)
 
 {-# INLINABLE oracleValue #-}
 oracleValue :: TxOut -> (DatumHash -> Maybe Datum) -> Maybe Integer
+-- f = ((`findDatum` info) DatumHash -> Maybe Datum)
 oracleValue o f = do
-    dh      <- txOutDatum o
-    Datum d <- f dh
+    dh      <- txOutDatum o -- txOutDatum :: TxOut -> Maybe DatumHash
+    Datum d <- f dh  -- `findDatum` info dh -> Maybe Datum
     PlutusTx.fromBuiltinData d
 
 {-# INLINABLE mkOracleValidator #-}
@@ -104,6 +105,26 @@ mkOracleValidator oracle x r ctx =
     outputHasToken = assetClassValueOf (txOutValue ownOutput) (oracleAsset oracle) == 1
 
     outputDatum :: Maybe Integer
+
+--    From what I understand: If I leave out a last parameter when calling a function I get a partially applied function back
+--    that take the parameter that have been left out.
+--    In case I use the infix syntax it looks like I can leave out a leading parameter to get a partially applied function back
+--    that take the parameter that have been left out.
+
+--    Prelude> :t elem
+--    elem :: (Foldable t, Eq a) => a -> t a -> Bool
+--    Prelude> :t (`elem` [3,4,5])
+--    (`elem` [3,4,5]) :: (Eq a, Num a) => a -> Bool
+--    Prelude> (`elem` [3,4,5,6]) 4
+--    True
+--    Prelude> (`elem` [3,4,5,6]) 2
+--    False
+
+--    oracleValue :: TxOut -> (DatumHash -> Maybe Datum) -> Maybe Integer
+--    oracleValue ownOutput   (`findDatum` info)
+
+--    findDatum :: DatumHash -> TxInfo -> Maybe Datum
+--    (`findDatum` info) is a partially applied function that gets the missing DatumHash as a parameter
     outputDatum = oracleValue ownOutput (`findDatum` info)
 
     validOutputDatum :: Bool
