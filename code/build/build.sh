@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+# Source: https://docs.plutus-community.com/docs/setup/MacOS.html
 cd plutus
 git fetch
 git checkout $1
@@ -12,10 +13,6 @@ nix-build -A plutus-pab
 # build the docs
 nix-build -A plutus-playground.haddock
 
-cd result/share/doc
-open .
-
-say build finished
+say build finishd starting nix shell
 
 nix-shell
-# Continue here: https://docs.plutus-community.com/docs/setup/MacOS.html
