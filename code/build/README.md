@@ -51,5 +51,5 @@ You can copy the shell scripts from this folder to
     * `cd .. && ./startRepl.sh 06`
 
 ## Credits
-# Most info came from https://docs.plutus-community.com/docs/setup/MacOS.html
-# Thanks for keeping that up Nikolay Stankov and u/RikAlexander (Reddit)
+Most info came from https://docs.plutus-community.com/docs/setup/MacOS.html.
+Thanks Nikolay Stankov and u/RikAlexander (Reddit)!
