@@ -14,7 +14,7 @@ and the path to your Plutus Pioneer Program GitHub folder looks like that:
 You can copy the shell scripts from this folder to
 `/Users/sandro/developing/learning/plutus`
 
-## The initial build
+## Build
 1. Navigate to the parent folder of the Plutus source code folder.
 `/Users/sandro/developing/learning/plutus` in this example.
 
@@ -49,3 +49,7 @@ You can copy the shell scripts from this folder to
     * `cd /Users/sandro/developing/learning/plutus/plutus`
     * `nix-shell`
     * `cd .. && ./startRepl.sh 06`
+
+## Credits
+# Most info came from https://docs.plutus-community.com/docs/setup/MacOS.html
+# Thanks for keeping that up Nikolay Stankov and u/RikAlexander (Reddit)
