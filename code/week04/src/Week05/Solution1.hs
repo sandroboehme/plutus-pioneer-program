@@ -10,7 +10,7 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE TypeOperators       #-}
 
-module Week05.Homework1 where
+module Week05.Solution1 where
 
 import           Control.Monad              hiding (fmap)
 import           Control.Monad.Freer.Extras as Extras
@@ -80,8 +80,8 @@ mint mp = do
         else do
             let val     = Value.singleton (curSymbol pkh deadline) (mpTokenName mp) (mpAmount mp)
                 lookups = Constraints.mintingPolicy $ policy pkh deadline
---                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to deadline)
-                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to $ now + 5000)
+                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to deadline)
+--                tx      = Constraints.mustMintValue val <> Constraints.mustValidateIn (to $ now + 5000)
             ledgerTx <- submitTxConstraintsWith @Void lookups tx
             void $ awaitTxConfirmed $ txId ledgerTx
             Contract.logInfo @String $ printf "forged %s" (show val)
