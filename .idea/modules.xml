@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/plutus-pioneer-program.iml" filepath="$PROJECT_DIR$/.idea/plutus-pioneer-program.iml" />
+      <module fileurl="file://$PROJECT_DIR$/code/week06/week06.iml" filepath="$PROJECT_DIR$/code/week06/week06.iml" />
     </modules>
   </component>
 </project>
