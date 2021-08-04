@@ -91,7 +91,7 @@ mkOracleValidator oracle x r ctx =
     ownInput :: TxOut
     ownInput = case findOwnInput ctx of
         Nothing -> traceError "oracle input missing"
-        Just i  -> txInInfoResolved i
+        Just i  -> txInInfoResolved i -- returns the corresponding input for the specified output?
 
     inputHasToken :: Bool
     inputHasToken = assetClassValueOf (txOutValue ownInput) (oracleAsset oracle) == 1
@@ -171,7 +171,7 @@ startOracle op = do
             { oSymbol   = cs
             , oOperator = pkh
             , oFee      = opFees op
-            , oAsset    = AssetClass (opSymbol op, opToken op)
+            , oAsset    = AssetClass (opSymbol op, opToken op) -- representing the exchange rate
             }
     logInfo @String $ "started oracle " ++ show oracle
     return oracle

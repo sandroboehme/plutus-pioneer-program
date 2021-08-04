@@ -44,6 +44,13 @@ lovelaces :: Value -> Integer
 lovelaces = Ada.getLovelace . Ada.fromValue
 
 {-# INLINABLE mkSwapValidator #-}
+
+-- The seller should get the token and the buyer should get the lovelace
+
+-- Oracle = The one from the other module
+-- Address = The address of the oracle
+-- PubKeyHash = The PubKey of the seller that will receive the price (datum)
+-- no redeemer
 mkSwapValidator :: Oracle -> Address -> PubKeyHash -> () -> ScriptContext -> Bool
 mkSwapValidator oracle addr pkh () ctx =
     txSignedBy info pkh ||
@@ -57,6 +64,7 @@ mkSwapValidator oracle addr pkh () ctx =
     oracleInput :: TxOut
     oracleInput =
       let
+      -- That's a list comprehension.
         ins = [ o
               | i <- txInfoInputs info
               , let o = txInInfoResolved i
@@ -91,6 +99,7 @@ mkSwapValidator oracle addr pkh () ctx =
     sellerPaid =
       let
         pricePaid :: Integer
+        -- (valuePaidTo info pkh) = all the value payed to this public key address
         pricePaid =  assetClassValueOf (valuePaidTo info pkh) (oAsset oracle)
       in
         pricePaid >= minPrice
@@ -116,6 +125,7 @@ swapAddress :: Oracle -> Ledger.Address
 swapAddress = scriptAddress . swapValidator
 
 offerSwap :: forall w s. Oracle -> Integer -> Contract w s Text ()
+-- amt = the amount of lovelace he wants to offer
 offerSwap oracle amt = do
     pkh <- pubKeyHash <$> Contract.ownPubKey
     let tx = Constraints.mustPayToTheScript pkh $ Ada.lovelaceValueOf amt
@@ -167,8 +177,9 @@ useSwap oracle = do
             logInfo @String $ "found oracle, exchange rate " ++ show x
             pkh   <- pubKeyHash <$> Contract.ownPubKey
             swaps <- findSwaps oracle (/= pkh)
-            case find (f amt x) swaps of
+            case find (f amt x) swaps of -- the predicate (f amt x) makes sure `find` returns all affordable swap UTxo`s
                 Nothing                -> logInfo @String "no suitable swap found"
+                -- Simply take the first swap that is affordable
                 Just (oref', o', pkh') -> do
                     let v       = txOutValue (txOutTxOut o) <> lovelaceValueOf (oFee oracle)
                         p       = assetClassValue (oAsset oracle) $ price (lovelaces $ txOutValue $ txOutTxOut o') x
