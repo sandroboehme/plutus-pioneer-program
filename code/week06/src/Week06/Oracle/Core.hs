@@ -80,6 +80,8 @@ mkOracleValidator oracle x r ctx =
     traceIfFalse "token missing from input"  inputHasToken  &&
     traceIfFalse "token missing from output" outputHasToken &&
     case r of
+      -- Anybody can produce arbitrary outputs at the same oracle script address.
+      -- This way only the operator can update the value.
         Update -> traceIfFalse "operator signature missing" (txSignedBy info $ oOperator oracle) &&
                   traceIfFalse "invalid output datum"       validOutputDatum
         Use    -> traceIfFalse "oracle value changed"       (outputDatum == Just x)              &&
@@ -165,6 +167,9 @@ data OracleParams = OracleParams
 startOracle :: forall w s. OracleParams -> Contract w s Text Oracle
 startOracle op = do
     pkh <- pubKeyHash <$> Contract.ownPubKey
+    -- Anybody can produce arbitrary outputs at the same oracle script address.
+    -- This NFT belongs only to the specific wallet contract.
+    -- This way only the owner of the wallet can update the value.
     osc <- mapError (pack . show) (mintContract pkh [(oracleTokenName, 1)] :: Contract w s CurrencyError OneShotCurrency)
     let cs     = Currency.currencySymbol osc
         oracle = Oracle
