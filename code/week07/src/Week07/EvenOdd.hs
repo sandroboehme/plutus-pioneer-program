@@ -214,13 +214,13 @@ firstGame fp = do
             , gToken          = AssetClass (fpCurrency fp, fpTokenName fp)
             }
         v    = lovelaceValueOf (fpStake fp) <> assetClassValue (gToken game) 1
-        c    = fpChoice fp
-        bs   = sha2_256 $ fpNonce fp `concatenate` if c == Zero then bsZero else bsOne
-        tx   = Constraints.mustPayToTheScript (GameDatum bs Nothing) v
+        firstChoiceHash   = sha2_256 $ fpNonce fp `concatenate` if fpChoice fp == Zero then bsZero else bsOne
+        tx   = Constraints.mustPayToTheScript (GameDatum firstChoiceHash Nothing) v
     ledgerTx <- submitTxConstraints (typedGameValidator game) tx
     void $ awaitTxConfirmed $ txId ledgerTx
     logInfo @String $ "made first move: " ++ show (fpChoice fp)
 
+    -- wait until 2nd player chose
     waitUntilTimeHasPassed $ fpPlayDeadline fp
 
     m   <- findGameOutput game
@@ -238,7 +238,7 @@ firstGame fp = do
                 void $ awaitTxConfirmed $ txId ledgerTx'
                 logInfo @String "reclaimed stake"
 
-            GameDatum _ (Just c') | c' == c -> do
+            GameDatum _ (Just c') | c' == (fpChoice fp) -> do
 
                 logInfo @String "second player played and lost"
                 let lookups = Constraints.unspentOutputs (Map.singleton oref o) <>
