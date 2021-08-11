@@ -19,7 +19,7 @@
 
 3. [Naive implementation](https://youtu.be/oJupInqvJUI?t=548)
 
-    1.[`Game`](https://youtu.be/oJupInqvJUI?t=548)
+    1.[`Game`](https://youtu.be/oJupInqvJUI?t=584)
 
     2.[`GameChoice`, `Eq GameChoice`](https://youtu.be/oJupInqvJUI?t=676)
 
@@ -29,13 +29,13 @@
 
     5.[`gameDatum`](https://youtu.be/oJupInqvJUI?t=846)
 
-    6.[`mkGameValidator`](https://youtu.be/oJupInqvJUI?t=846)
+    6.[`mkGameValidator`](https://youtu.be/oJupInqvJUI?t=895)
 
     1. [`info`, `ownInput`](https://youtu.be/oJupInqvJUI?t=952)
 
     2. [`ownOutput`](https://youtu.be/oJupInqvJUI?t=969)
 
-    3. [`outputDatum`](https://youtu.be/oJupInqvJUI?t=969)
+    3. [`outputDatum`](https://youtu.be/oJupInqvJUI?t=992)
 
     4. [`checkNonce`](https://youtu.be/oJupInqvJUI?t=1010)
 
@@ -46,11 +46,11 @@
        1. [1st case: First player moved, the second player is moving now](https://youtu.be/oJupInqvJUI?t=1202)
        2. [2nd case: Both players moved and the first player discovers that he has won](https://youtu.be/oJupInqvJUI?t=1281)
        3. [3rd case: Second player didn't move within the deadline and first player wants to have his stake back](https://youtu.be/oJupInqvJUI?t=1321)
-       4. [4th case: Both players moved. First player missed the deadline. ](https://youtu.be/oJupInqvJUI?t=1281)
+       4. [4th case: Both players moved. First player missed the deadline. ](https://youtu.be/oJupInqvJUI?t=1347)
 
     7.[`Gaming`, `bsZero`, `bsOne`](https://youtu.be/oJupInqvJUI?t=1410)
 
-    8.[`gameInst`, `gameValidator`, `gameAddress`](https://youtu.be/oJupInqvJUI?t=1410)
+    8.[`gameInst`, `gameValidator`, `gameAddress`](https://youtu.be/oJupInqvJUI?t=1433)
 
     9.[`findGameOutput`](https://youtu.be/oJupInqvJUI?t=1464)
 
@@ -101,9 +101,9 @@
    3.[`transition`, short intro and comparison to non state machine version](https://youtu.be/oJupInqvJUI?t=2929)
     1. [1st case: First player moved, the second player is moving now](https://youtu.be/oJupInqvJUI?t=3028)
 
-    2. [2nd case: Both players moved and the first player discovers that he has won](https://youtu.be/oJupInqvJUI?t=3028)
+    2. [2nd case: Both players moved and the first player discovers that he has won](https://youtu.be/oJupInqvJUI?t=3189)
 
-    3. [3rd case: Second player didn't move within the deadline and first player wants to have his stake back](https://youtu.be/oJupInqvJUI?t=3028)
+    3. [3rd case: Second player didn't move within the deadline and first player wants to have his stake back](https://youtu.be/oJupInqvJUI?t=3266)
 
     4. [4th case: Both players moved. First player missed the deadline.](https://youtu.be/oJupInqvJUI?t=3311)
 
@@ -122,8 +122,8 @@
    11.[`firstGame`, using `pubKeyHash`, `gameClient`, `runInitialize` and `mapError'`](https://youtu.be/oJupInqvJUI?t=3745)
 
     1. [`findGameOutput` vs. `getOnChainState` after play-deadline passed](https://youtu.be/oJupInqvJUI?t=3840)
-
-    2. [case on-chain not found / found, `runStep`](https://youtu.be/oJupInqvJUI?t=3840)
+xxx
+    2. [case on-chain not found / found, `runStep`](https://youtu.be/oJupInqvJUI?t=3951)
 
    12.[`secondGame`](https://youtu.be/oJupInqvJUI?t=4126)
 
