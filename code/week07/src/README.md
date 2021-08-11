@@ -96,7 +96,7 @@
    2.[Even Odd with state machine, changes](https://youtu.be/oJupInqvJUI?t=2858)
    * `Game` and `GameChoice` stay the same `GameDatum` now additionally has a `Finished` constructor for the final state (won't correspond to an UTxO).
    * `Eq GameDatum` has changed for the final state as well.
-   * `lovelaces` and `gameDatum` are the same and `GameRedeemer` is very similar
+   * `GameRedeemer`, `lovelaces` and `gameDatum` are the same
 
    3.[`transition`, short intro and comparison to non state machine version](https://youtu.be/oJupInqvJUI?t=2929)
     1. [1st case: First player moved, the second player is moving now](https://youtu.be/oJupInqvJUI?t=3028)
