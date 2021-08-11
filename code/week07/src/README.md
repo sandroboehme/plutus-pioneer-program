@@ -1,4 +1,15 @@
 # Lecture 7 Chapter Links
+
+0. YouTube video shortcuts
+    * Overview: `?`
+    * 10 sec forward / backward = `f` / `j`
+    * 5 sec forward / backward = cursor left / cursor right
+    * QWERTY: faster / slower = `>` / `<`
+    * QWERTZ: faster / slower doesn't work out of the box
+      * Install [Playspeed for Chrome](https://chrome.google.com/webstore/detail/playspeed/dgdpebjegmddbloaoiggfpdmkjmgiajj)
+      * Works not only for YouTube
+      * faster / slower = `s` / `d` 
+
 1. [Even Odd Procedure](https://youtu.be/oJupInqvJUI?t=79)
     * Playing via email, snail, blockchain
     * Commit Scheme
@@ -122,7 +133,7 @@
 
    13.[State machine use cases wrap up](https://youtu.be/oJupInqvJUI?t=4363)
 
-4. [Homework](https://youtu.be/oJupInqvJUI?t=4442)
+5. [Homework](https://youtu.be/oJupInqvJUI?t=4442)
 
 
 
