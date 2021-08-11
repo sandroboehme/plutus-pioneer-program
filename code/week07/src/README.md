@@ -1,7 +1,7 @@
 # Lecture 7 Chapter Links
 
 0. YouTube video shortcuts
-    * Overview: `?`
+    * Shortcut overview: `?`
     * 10 sec forward / backward = `f` / `j`
     * 5 sec forward / backward = cursor left / cursor right
     * QWERTY: faster / slower = `>` / `<`
