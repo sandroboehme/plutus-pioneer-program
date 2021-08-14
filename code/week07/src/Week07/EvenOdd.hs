@@ -98,19 +98,27 @@ mkGameValidator game bsZero' bsOne' dat red ctx =
             traceIfFalse "token missing from output"     (assetClassValueOf (txOutValue ownOutput) (gToken game) == 1)
 
         (GameDatum bs (Just c), Reveal nonce) ->
+            -- If the move of player 1 matches the one of player 2 and the
+            -- gRevealDeadline has not passed yet then player 1 can claim both stakes.
             traceIfFalse "not signed by first player"    (txSignedBy info (gFirst game))                                    &&
+            -- checkNonce also checks if both moves are equal which qualifies Player 1 to claim both stakes.
             traceIfFalse "commit mismatch"               (checkNonce bs nonce c)                                            &&
             traceIfFalse "missed deadline"               (to (gRevealDeadline game) `contains` txInfoValidRange info)       &&
             traceIfFalse "wrong stake"                   (lovelaces (txOutValue ownInput) == (2 * gStake game))             &&
             traceIfFalse "NFT must go to first player"   nftToFirst
 
         (GameDatum _ Nothing, ClaimFirst) ->
+            -- Player 2 didn't move within the gRevealDeadline which means he is not interested
+            -- and player 1 can get his stake back
             traceIfFalse "not signed by first player"    (txSignedBy info (gFirst game))                                    &&
             traceIfFalse "too early"                     (from (1 + gPlayDeadline game) `contains` txInfoValidRange info)   &&
             traceIfFalse "first player's stake missing"  (lovelaces (txOutValue ownInput) == gStake game)                   &&
             traceIfFalse "NFT must go to first player"   nftToFirst
 
         (GameDatum _ (Just _), ClaimSecond) ->
+            -- Player 1 didn't claim his stake until the gRevealDeadline.
+            -- It's assumed that he doesn't claim it if he has lost and player 2
+            -- is allowed to claim both stakes.
             traceIfFalse "not signed by second player"   (txSignedBy info (gSecond game))                                   &&
             traceIfFalse "too early"                     (from (1 + gRevealDeadline game) `contains` txInfoValidRange info) &&
             traceIfFalse "wrong stake"                   (lovelaces (txOutValue ownInput) == (2 * gStake game))             &&
@@ -136,6 +144,9 @@ mkGameValidator game bsZero' bsOne' dat red ctx =
         Nothing -> traceError "game output datum not found"
         Just d  -> d
 
+    -- Checks if hashing the second choice with the nonce leads to the
+    -- initially committed ByteString. That in turn means that the first
+    -- choice and the second one are the same.
     checkNonce :: ByteString -> ByteString -> GameChoice -> Bool
     checkNonce bs nonce cSecond = sha2_256 (nonce `concatenate` cFirst) == bs
       where

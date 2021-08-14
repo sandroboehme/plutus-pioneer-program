@@ -2,7 +2,9 @@
 <module type="HASKELL_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
-    <content url="file://$MODULE_DIR$" />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/dist-newstyle" />
+    </content>
     <orderEntry type="jdk" jdkName="Haskell Tool Stack" jdkType="Haskell Tool Stack SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="base-4.14.1.0" level="project" />
