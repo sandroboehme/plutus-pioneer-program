@@ -11,8 +11,10 @@ License-files:       LICENSE
 library
   hs-source-dirs:      src
   exposed-modules:     Week07.EvenOdd
+                     , Week07.RockPaperScissors
                      , Week07.StateMachine
                      , Week07.Test
+                     , Week07.TestRockPaperScissors
                      , Week07.TestStateMachine
                      , Week07.RockPaperScissorsSandro
                      , Week07.TestRPS
