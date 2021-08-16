@@ -14,7 +14,7 @@ library
                      , Week07.StateMachine
                      , Week07.Test
                      , Week07.TestStateMachine
-                     , Week07.RockPaperScissors
+                     , Week07.RockPaperScissorsSandro
                      , Week07.TestRPS
   build-depends:       aeson
                      , base ^>=4.14.1.0

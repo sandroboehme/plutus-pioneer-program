@@ -24,7 +24,7 @@ import           PlutusTx.Prelude
 import           Prelude                    (IO, Show (..))
 import           Wallet.Emulator.Wallet
 
-import           Week07.RockPaperScissors
+import           Week07.RockPaperScissorsSandro
 
 testRPS :: IO ()
 testRPS = do

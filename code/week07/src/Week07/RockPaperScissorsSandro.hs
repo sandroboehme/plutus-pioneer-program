@@ -23,7 +23,7 @@
 -- o see if it's better to use pattern matching instead of `bs' !! 0` e.g. `getChoiceBS rockBS:paperBS:scissorsBS:[] gc = case gc of`?
 -- o check why the solution doesn't need to `check` for a draw (only for plain nonce check and `beats` only in guard?): https://github.com/input-output-hk/plutus-pioneer-program/blob/solutions/code/week07/src/Week07/RockPaperScissors.hs#L140
 -- o better log output on the result of the game. Along the lines of: https://github.com/input-output-hk/plutus-pioneer-program/blob/solutions/code/week07/src/Week07/RockPaperScissors.hs#L244
-module Week07.RockPaperScissors
+module Week07.RockPaperScissorsSandro
     ( Game (..)
     , GameChoice (..)
     , FirstParams (..)
