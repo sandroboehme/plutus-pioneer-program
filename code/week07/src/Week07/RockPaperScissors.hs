@@ -10,7 +10,18 @@
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
-
+-- possible improvements:
+-- o more renamings
+-- o specific redeemer for the draw (and renaming of the reveal redeemer)
+-- o remove redundant TypeClass <-> ByteString conversion:
+--{-# INLINABLE getChoiceBS #-}
+--getChoiceBS :: [ByteString] -> GameChoice -> ByteString
+--getChoiceBS bs' gc = case gc of
+--    Rock        -> bs' !! 0
+--    Scissors    -> bs' !! 1
+--    Paper       -> bs' !! 2
+-- o see if it's better to use pattern matching instead of `bs' !! 0` e.g. `getChoiceBS rockBS:paperBS:scissorsBS:[] gc = case gc of`?
+-- o check why the solution doesn't need to `check` for a draw (only for plain nonce check and `beats` only in guard?): https://github.com/input-output-hk/plutus-pioneer-program/blob/solutions/code/week07/src/Week07/RockPaperScissors.hs#L140
 module Week07.RockPaperScissors
     ( Game (..)
     , GameChoice (..)
@@ -122,7 +133,6 @@ transition game s r = case (stateValue s, stateData s, r) of
         | (lovelaces v == (2 * gStake game)) && (choice2ndPlayer == choice1stPlayer)
                                              -> Just ( Constraints.mustBeSignedBy (gFirst game)                      <>
                                                        Constraints.mustValidateIn (to $ gRevealDeadline game) <>
-                                                       Constraints.mustPayToPubKey (gFirst game) ( lovelaceValueOf (gStake game)) <>
                                                        Constraints.mustPayToPubKey (gSecond game) (lovelaceValueOf (gStake game))
                                                      , State Finished mempty
                                                      )
