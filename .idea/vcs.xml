@@ -86,5 +86,19 @@
     <mapping directory="$PROJECT_DIR$/code/week07/dist-newstyle/src/plutus-3214de3b8d8ae7cc" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/code/week07/dist-newstyle/src/purescrip_-dbf3a2a8ca5c958c" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/code/week07/dist-newstyle/src/servant-p_-2a9020fb8c4044b3" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/Win32-net_-5b9448ed2f179086" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/cardano-b_-c8db9876882556ed" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/cardano-c_-6913fd4f4ef86015" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/cardano-l_-48e3a74bf8b61f34" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/cardano-n_-f77532c42500fe62" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/cardano-p_-cae013aee062332a" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/flat-3cb8c450312dfc1f" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/goblins-67efee8d68d79164" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/hedgehog-_-586c3da22a5ce29b" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/iohk-moni_-1defcf7452717dc5" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/ouroboros_-e51b1e265e7bb521" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/plutus-3214de3b8d8ae7cc" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/purescrip_-dbf3a2a8ca5c958c" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/code/week08/dist-newstyle/src/servant-p_-2a9020fb8c4044b3" vcs="Git" />
   </component>
 </project>
