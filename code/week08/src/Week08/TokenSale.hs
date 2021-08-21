@@ -46,11 +46,19 @@ data TokenSale = TokenSale
 PlutusTx.makeLift ''TokenSale
 
 data TSRedeemer =
-      SetPrice Integer
-    | AddTokens Integer
-    | BuyTokens Integer
-    | Withdraw Integer Integer
+      SetPrice Integer -- token price in lovelace
+    | AddTokens Integer -- amount of tokens to add
+    | BuyTokens Integer -- amount of tokens to buy
+    | Withdraw Integer Integer -- token amount, lovelace amount
+    -- `Close` can only be called by the seller to close the contract / UTxO
+    -- and collect the remaining tokens and lovelace and the NFT
+    | Close TokenName -- close the token sale and specify the nft token name to return to the seller
     deriving (Show, Prelude.Eq)
+
+-- So for the model you could add a new action close,
+-- For the emulator trace as well,
+-- as a last step provide the close action.
+
 
 PlutusTx.unstableMakeIsData ''TSRedeemer
 
@@ -59,46 +67,76 @@ lovelaces :: Value -> Integer
 lovelaces = Ada.getLovelace . Ada.fromValue
 
 {-# INLINABLE transition #-}
-transition :: TokenSale -> State Integer -> TSRedeemer -> Maybe (TxConstraints Void Void, State Integer)
+-- State Integer = The datum type of the state is `Integer` = the price of the token
+-- Use `State c`
+-- `Just Integer` means that the contract is still active
+-- `Nothing` means it has been closed
+transition :: TokenSale -> State (Maybe Integer) -> TSRedeemer -> Maybe (TxConstraints Void Void, State (Maybe Integer))
 transition ts s r = case (stateValue s, stateData s, r) of
-    (v, _, SetPrice p)   | p >= 0           -> Just ( Constraints.mustBeSignedBy (tsSeller ts)
-                                                    , State p v
+    (v, (Just _), SetPrice p)   | p >= 0           -> Just ( Constraints.mustBeSignedBy (tsSeller ts)
+                                                    , State (Just p) v
                                                     )
-    (v, p, AddTokens n)  | n > 0            -> Just ( mempty
-                                                    , State p $
+    (v, (Just p), AddTokens n)  | n > 0            -> Just ( mempty
+                                                    , State (Just p) $
                                                       v                                       <>
                                                       assetClassValue (tsToken ts) n
+                                                      -- `assetClassValue :: AssetClass -> Integer -> Value`
+                                                      -- A Value containing the given amount of the asset class.
+                                                      -- http://localhost:8088/plutus-ledger-api/html/Plutus-V1-Ledger-Value.html#v:assetClassValue
                                                     )
-    (v, p, BuyTokens n)  | n > 0            -> Just ( mempty
-                                                    , State p $
+    (v, (Just p), BuyTokens n)  | n > 0            -> Just ( mempty
+                                                      -- p = price
+                                                    , State (Just p) $
                                                       v                                       <>
                                                       assetClassValue (tsToken ts) (negate n) <>
                                                       lovelaceValueOf (n * p)
                                                     )
-    (v, p, Withdraw n l) | n >= 0 && l >= 0 -> Just ( Constraints.mustBeSignedBy (tsSeller ts)
-                                                    , State p $
+    (v, (Just p), Withdraw n l) | n >= 0 && l >= 0 -> Just ( Constraints.mustBeSignedBy (tsSeller ts)
+                                                    , State (Just p) $
                                                       v                                       <>
                                                       assetClassValue (tsToken ts) (negate n) <>
                                                       lovelaceValueOf (negate l)
                                                     )
+    (v, (Just _), Close tn)                           -> case (tsTT ts) of
+                                                        Just tt -> Just (
+                                                                      Constraints.mustBeSignedBy (tsSeller ts)
+                                                                  , State (Nothing) $
+                                                                    v                                       <>
+                                                                    assetClassValue (tsToken ts) (negate (assetClassValueOf v (tsToken ts))) <>
+                                                                    lovelaceValueOf  (negate (lovelaces v)) <>
+                                                                    singleton (ttCurrencySymbol tt) tn (negate 1)
+
+                                                                  )
+                                                        Nothing -> Nothing
     _                                       -> Nothing
 
+getTokenName :: TokenSale -> TokenName
+getTokenName ts = TokenName (getTTBs (validatorHash validator))
+    where
+      validator :: Validator
+      validator = tsValidator ts
+      getTTBs :: ValidatorHash -> ByteString
+      getTTBs (ValidatorHash vHash) = vHash
+
 {-# INLINABLE tsStateMachine #-}
-tsStateMachine :: TokenSale -> StateMachine Integer TSRedeemer
+tsStateMachine :: TokenSale -> StateMachine (Maybe Integer) TSRedeemer
+-- the last parameter `(const False)` indicates which states are final
+-- the literal means that there are no final states
 tsStateMachine ts = mkStateMachine (tsTT ts) (transition ts) (const False)
 
 {-# INLINABLE mkTSValidator #-}
-mkTSValidator :: TokenSale -> Integer -> TSRedeemer -> ScriptContext -> Bool
+mkTSValidator :: TokenSale -> Maybe Integer -> TSRedeemer -> ScriptContext -> Bool
 mkTSValidator = mkValidator . tsStateMachine
 
-type TS = StateMachine Integer TSRedeemer
+type TS = StateMachine (Maybe Integer) TSRedeemer
+
 
 tsTypedValidator :: TokenSale -> Scripts.TypedValidator TS
 tsTypedValidator ts = Scripts.mkTypedValidator @TS
     ($$(PlutusTx.compile [|| mkTSValidator ||]) `PlutusTx.applyCode` PlutusTx.liftCode ts)
     $$(PlutusTx.compile [|| wrap ||])
   where
-    wrap = Scripts.wrapValidator @Integer @TSRedeemer
+    wrap = Scripts.wrapValidator @(Maybe Integer) @TSRedeemer
 
 tsValidator :: TokenSale -> Validator
 tsValidator = Scripts.validatorScript . tsTypedValidator
@@ -106,15 +144,18 @@ tsValidator = Scripts.validatorScript . tsTypedValidator
 tsAddress :: TokenSale -> Ledger.Address
 tsAddress = scriptAddress . tsValidator
 
-tsClient :: TokenSale -> StateMachineClient Integer TSRedeemer
+tsClient :: TokenSale -> StateMachineClient (Maybe Integer) TSRedeemer
 tsClient ts = mkStateMachineClient $ StateMachineInstance (tsStateMachine ts) (tsTypedValidator ts)
 
 mapErrorSM :: Contract w s SMContractError a -> Contract w s Text a
 mapErrorSM = mapError $ pack . show
 
 startTS :: AssetClass -> Bool -> Contract (Last TokenSale) s Text ()
+-- what is `useTT`?
 startTS token useTT = do
     pkh <- pubKeyHash <$> Contract.ownPubKey
+    -- I guess `useTT` is to make testing easier later - to use a thread token if one
+    -- exists or to create one if none is provided
     tt  <- if useTT then Just <$> mapErrorSM getThreadToken else return Nothing
     let ts = TokenSale
             { tsSeller = pkh
@@ -122,9 +163,10 @@ startTS token useTT = do
             , tsTT     = tt
             }
         client = tsClient ts
-    void $ mapErrorSM $ runInitialise client 0 mempty
+    void $ mapErrorSM $ runInitialise client (Just 0) mempty
     tell $ Last $ Just ts
-    logInfo $ "started token sale " ++ show ts
+    logInfo $ "started token sale (endpoint) " ++ show ts
+    logInfo $ "Thread token name: " ++ (show (getTokenName ts))
 
 setPrice :: TokenSale -> Integer -> Contract w s Text ()
 setPrice ts p = void $ mapErrorSM $ runStep (tsClient ts) $ SetPrice p
@@ -138,6 +180,9 @@ buyTokens ts n = void $ mapErrorSM $ runStep (tsClient ts) $ BuyTokens n
 withdraw :: TokenSale -> Integer -> Integer -> Contract w s Text ()
 withdraw ts n l = void $ mapErrorSM $ runStep (tsClient ts) $ Withdraw n l
 
+close :: TokenSale -> () -> Contract w s Text ()
+close ts _ = void $ mapErrorSM $ runStep (tsClient ts) $ Close (getTokenName ts)
+
 type TSStartSchema =
         Endpoint "start"      (CurrencySymbol, TokenName, Bool)
 type TSUseSchema =
@@ -145,6 +190,7 @@ type TSUseSchema =
     .\/ Endpoint "add tokens" Integer
     .\/ Endpoint "buy tokens" Integer
     .\/ Endpoint "withdraw"   (Integer, Integer)
+    .\/ Endpoint "close contract" ()
 
 startEndpoint :: Contract (Last TokenSale) TSStartSchema Text ()
 startEndpoint = forever
@@ -156,9 +202,10 @@ useEndpoints :: TokenSale -> Contract () TSUseSchema Text ()
 useEndpoints ts = forever
                 $ handleError logError
                 $ awaitPromise
-                $ setPrice' `select` addTokens' `select` buyTokens' `select` withdraw'
+                $ setPrice' `select` addTokens' `select` buyTokens' `select` withdraw' `select` close'
   where
     setPrice'  = endpoint @"set price"  $ setPrice ts
     addTokens' = endpoint @"add tokens" $ addTokens ts
     buyTokens' = endpoint @"buy tokens" $ buyTokens ts
     withdraw'  = endpoint @"withdraw"   $ uncurry (withdraw ts)
+    close'     = endpoint @"close contract" $ close ts

@@ -71,7 +71,7 @@ myTrace = do
     case m of
         Nothing -> Extras.logError @String "error starting token sale"
         Just ts -> do
-            Extras.logInfo $ "started token sale " ++ show ts
+            Extras.logInfo $ "started token sale (trace) " ++ show ts
 
             h1 <- activateContractWallet (Wallet 1) $ useEndpoints ts
             h2 <- activateContractWallet (Wallet 2) $ useEndpoints ts
@@ -90,4 +90,7 @@ myTrace = do
             void $ Emulator.waitNSlots 5
 
             callEndpoint @"withdraw" h1 (40, 10_000_000)
+            void $ Emulator.waitNSlots 5
+
+            callEndpoint @"close contract" h1 ()
             void $ Emulator.waitNSlots 5
