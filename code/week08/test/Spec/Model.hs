@@ -65,23 +65,34 @@ instance ContractModel TSModel where
             | AddTokens Wallet Wallet Integer
             | Withdraw Wallet Wallet Integer Integer
             | BuyTokens Wallet Wallet Integer
+            -- | Close Wallet Wallet TokenName
         deriving (Show, Eq)
 
+    -- Generalalized algebraic data type (GADT)
+    -- With normal data types the type parameters are always the same for all constructors.
+    -- E.g. all constructors would produce the same list of a specific type.
     data ContractInstanceKey TSModel w s e where
+      -- StartKey is the constructor, Wallet is the parameter the ContractInstanceKey ... is the return type
+      -- `Last TokenSale` is the state for `tell`
         StartKey :: Wallet           -> ContractInstanceKey TSModel (Last TokenSale) TSStartSchema Text
         UseKey   :: Wallet -> Wallet -> ContractInstanceKey TSModel ()               TSUseSchema   Text
 
     instanceTag key _ = fromString $ "instance tag for: " ++ show key
 
+    -- applicative style
+    -- `<$>` = `fmap` from the Functor class
     arbitraryAction _ = oneof $
         (Start <$> genWallet) :
         [ SetPrice  <$> genWallet <*> genWallet <*> genNonNeg ]               ++
         [ AddTokens <$> genWallet <*> genWallet <*> genNonNeg ]               ++
         [ BuyTokens <$> genWallet <*> genWallet <*> genNonNeg ]               ++
-        [ Withdraw  <$> genWallet <*> genWallet <*> genNonNeg <*> genNonNeg ]
+        [ Withdraw  <$> genWallet <*> genWallet <*> genNonNeg <*> genNonNeg ] -- ++
+        --[ Close     <$> genWallet <*> genWallet <*> genNonNeg <*> genNonNeg ]
 
     initialState = TSModel Map.empty
 
+    -- The function defines - what is the effect on our model
+    -- if we encounter the `Start w` action - if wallet `w` starts a token sale.
     nextState (Start w) = do
         (tsModel . at w) $= Just (TSState 0 0 0)
         wait 1
@@ -96,6 +107,7 @@ instance ContractModel TSModel where
         when (n > 0 && started) $ do
             bc <- askModelState $ view $ balanceChange w
             let token = tokens Map.! v
+            -- `tokenAmt` == initial supply
             when (tokenAmt + assetClassValueOf bc token >= n) $ do  -- does the wallet have the tokens to give?
                 withdraw w $ assetClassValue token n
                 (tsModel . ix v . tssToken) $~ (+ n)
@@ -201,6 +213,7 @@ prop_TS :: Actions TSModel -> Property
 prop_TS = withMaxSuccess 100 . propRunActionsWithOptions
     (defaultCheckOptions & emulatorConfig .~ EmulatorConfig (Left d) def def)
     instanceSpec
+    -- `pure` is just a synonym for `return`. It comes from applicative.
     (const $ pure True)
   where
     d :: InitialDistribution
