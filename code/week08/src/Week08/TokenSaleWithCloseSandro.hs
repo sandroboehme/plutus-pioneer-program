@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Week08.TokenSaleManualRepayment
+module Week08.TokenSaleWithCloseSandro
     ( TokenSale (..)
     , TSRedeemer (..)
     , TSStartSchema
@@ -52,7 +52,7 @@ data TSRedeemer =
     | Withdraw Integer Integer -- token amount, lovelace amount
     -- `Close` can only be called by the seller to close the contract / UTxO
     -- and collect the remaining tokens and lovelace and the NFT
-    | Close TokenName -- close the token sale and specify the nft token name to return to the seller
+    | Close
     deriving (Show, Prelude.Eq)
 
 -- So for the model you could add a new action close,
@@ -97,32 +97,22 @@ transition ts s r = case (stateValue s, stateData s, r) of
                                                       assetClassValue (tsToken ts) (negate n) <>
                                                       lovelaceValueOf (negate l)
                                                     )
-    (v, (Just _), Close tn)                           -> case (tsTT ts) of
-                                                        Just tt -> Just (
-                                                                      Constraints.mustBeSignedBy (tsSeller ts)
-                                                                  , State (Nothing) $
-                                                                    v                                       <>
-                                                                    assetClassValue (tsToken ts) (negate (assetClassValueOf v (tsToken ts))) <>
-                                                                    lovelaceValueOf  (negate (lovelaces v)) <>
-                                                                    singleton (ttCurrencySymbol tt) tn (negate 1)
+    (v, (Just _), Close)                           -> Just ( Constraints.mustBeSignedBy (tsSeller ts)
+                                                      , State Nothing mempty
+                                                      )
+    _                                              -> Nothing
 
-                                                                  )
-                                                        Nothing -> Nothing
-    _                                       -> Nothing
 
-getTokenName :: TokenSale -> TokenName
-getTokenName ts = TokenName (getTTBs (validatorHash validator))
-    where
-      validator :: Validator
-      validator = tsValidator ts
-      getTTBs :: ValidatorHash -> ByteString
-      getTTBs (ValidatorHash vHash) = vHash
+{-# INLINABLE final #-}
+final :: Maybe Integer -> Bool
+final Nothing   = True
+final _          = False
 
 {-# INLINABLE tsStateMachine #-}
 tsStateMachine :: TokenSale -> StateMachine (Maybe Integer) TSRedeemer
 -- the last parameter `(const False)` indicates which states are final
 -- the literal means that there are no final states
-tsStateMachine ts = mkStateMachine (tsTT ts) (transition ts) (const False)
+tsStateMachine ts = mkStateMachine (tsTT ts) (transition ts) final
 
 {-# INLINABLE mkTSValidator #-}
 mkTSValidator :: TokenSale -> Maybe Integer -> TSRedeemer -> ScriptContext -> Bool
@@ -166,7 +156,7 @@ startTS token useTT = do
     void $ mapErrorSM $ runInitialise client (Just 0) mempty
     tell $ Last $ Just ts
     logInfo $ "started token sale (endpoint) " ++ show ts
-    logInfo $ "Thread token name: " ++ (show (getTokenName ts))
+    logInfo $ "Thread token: " ++ (show (tt))
 
 setPrice :: TokenSale -> Integer -> Contract w s Text ()
 setPrice ts p = void $ mapErrorSM $ runStep (tsClient ts) $ SetPrice p
@@ -181,7 +171,7 @@ withdraw :: TokenSale -> Integer -> Integer -> Contract w s Text ()
 withdraw ts n l = void $ mapErrorSM $ runStep (tsClient ts) $ Withdraw n l
 
 close :: TokenSale -> () -> Contract w s Text ()
-close ts _ = void $ mapErrorSM $ runStep (tsClient ts) $ Close (getTokenName ts)
+close ts _ = void $ mapErrorSM $ runStep (tsClient ts) $ Close
 
 type TSStartSchema =
         Endpoint "start"      (CurrencySymbol, TokenName, Bool)

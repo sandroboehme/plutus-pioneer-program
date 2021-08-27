@@ -14,7 +14,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Spec.Model
+module Spec.ModelSandro
     ( tests
     , test
     , TSModel (..)
@@ -39,7 +39,7 @@ import           Test.QuickCheck
 import           Test.Tasty
 import           Test.Tasty.QuickCheck
 
-import           Week08.TokenSale                   (TokenSale (..), TSStartSchema, TSUseSchema, startEndpoint, useEndpoints)
+import           Week08.TokenSaleWithCloseSandro                   (TokenSale (..), TSStartSchema, TSUseSchema, startEndpoint, useEndpoints)
 
 data TSState = TSState
     { _tssPrice    :: !Integer
@@ -65,6 +65,7 @@ instance ContractModel TSModel where
             | AddTokens Wallet Wallet Integer
             | Withdraw Wallet Wallet Integer Integer
             | BuyTokens Wallet Wallet Integer
+            | Close Wallet Wallet
         deriving (Show, Eq)
 
     -- Generalalized algebraic data type (GADT)
@@ -85,14 +86,39 @@ instance ContractModel TSModel where
         [ SetPrice  <$> genWallet <*> genWallet <*> genNonNeg ]               ++
         [ AddTokens <$> genWallet <*> genWallet <*> genNonNeg ]               ++
         [ BuyTokens <$> genWallet <*> genWallet <*> genNonNeg ]               ++
-        [ Withdraw  <$> genWallet <*> genWallet <*> genNonNeg <*> genNonNeg ]
+        [ Withdraw  <$> genWallet <*> genWallet <*> genNonNeg <*> genNonNeg ] ++
+        [ Close     <$> genWallet <*> genWallet ]
 
     initialState = TSModel Map.empty
 
+    -- :t nextState
+    -- nextState :: ContractModel state => Action state -> Spec state ()
+    --
+    -- It takes an action and returns something in the `Spec` monad.
+    -- That monad allows us to inspect the current state of our model and to transfer funds in our model.
+    -- This is not the new funds on the blockchain or the emulator but the model.
+    -- It knows how many funds each wallet currently holds and we can shift that.
+    --
     -- The function defines - what is the effect on our model
     -- if we encounter the `Start w` action - if wallet `w` starts a token sale.
     nextState (Start w) = do
+        -- `tsModel` returns `Map Wallet TSState`
+        -- `. at w` is like `get(w)` it returns `Maybe TSState` for the key `w` in the map.
+        -- At this point it should be nothing because the token sale has not started yet.
+        -- `$=` come from the spec monad. It takes a lens at the left hand side and a new value at the right hand side.
+        -- The entry in the map for the key `w` changes to `Just (TSState 0 0 0)`.
         (tsModel . at w) $= Just (TSState 0 0 0)
+        wait 1
+
+    nextState (Close v w) = do
+        when (v == w) $ do
+            m <- getTSState v
+            case m of
+                Just t -> do
+                        deposit w $ lovelaceValueOf (t ^. tssLovelace) <> assetClassValue (tokens Map.! w) (t ^. tssToken)
+                        (tsModel . at w) $= Nothing
+                        return ()
+                _ -> return ()
         wait 1
 
     nextState (SetPrice v w p) = do
@@ -108,6 +134,10 @@ instance ContractModel TSModel where
             -- `tokenAmt` == initial supply
             when (tokenAmt + assetClassValueOf bc token >= n) $ do  -- does the wallet have the tokens to give?
                 withdraw w $ assetClassValue token n
+
+                -- `$~` applies a function to a value
+                -- `. ix v` is like `get(w)` it returns `TSState` for the key `w` in the map.
+                -- The difference to `.at w` is that it doesn't return a `Maybe`.
                 (tsModel . ix v . tssToken) $~ (+ n)
         wait 1
 
@@ -144,12 +174,14 @@ instance ContractModel TSModel where
         (AddTokens v w n)  -> callEndpoint @"add tokens" (h $ UseKey v w) n                                                    >> delay 1
         (BuyTokens v w n)  -> callEndpoint @"buy tokens" (h $ UseKey v w) n                                                    >> delay 1
         (Withdraw v w n l) -> callEndpoint @"withdraw"   (h $ UseKey v w) (n, l)                                               >> delay 1
+        (Close v w)        -> callEndpoint @"close contract"   (h $ UseKey v w)    ()                                          >> delay 1
 
     precondition s (Start w)          = isNothing $ getTSState' s w
     precondition s (SetPrice v _ _)   = isJust    $ getTSState' s v
     precondition s (AddTokens v _ _)  = isJust    $ getTSState' s v
     precondition s (BuyTokens v _ _)  = isJust    $ getTSState' s v
     precondition s (Withdraw v _ _ _) = isJust    $ getTSState' s v
+    precondition s (Close v _)        = isJust    $ getTSState' s v
 
 deriving instance Eq (ContractInstanceKey TSModel w s e)
 deriving instance Show (ContractInstanceKey TSModel w s e)
