@@ -29,10 +29,12 @@
    10. [`useEndpoints`](https://youtu.be/JMRwkMgaBOg?t=1114)
 2. [Automatic testing using emulator traces](https://youtu.be/JMRwkMgaBOg?t=1145)
    1. [Tasty](https://youtu.be/JMRwkMgaBOg?t=1523)
-3. [Optics]()
+3. [Optics](https://youtu.be/JMRwkMgaBOg?t=1976)
 4. [Property based testing with QuickCheck](https://youtu.be/JMRwkMgaBOg?t=2849)
 5. [Property based testing of Plutus Contracts](https://www.youtube.com/watch?v=JMRwkMgaBOg&t=3642s)
    1. [Model/System approach](https://youtu.be/JMRwkMgaBOg?t=3693)
+      1. "System" is the real system
+      2. "Model" is a model of the real system
    2. [Implementation imports](https://youtu.be/JMRwkMgaBOg?t=3870)
    3. [`TSState`, `TSModel`](https://youtu.be/JMRwkMgaBOg?t=3910)
    4. [`Action TSModel`](https://youtu.be/JMRwkMgaBOg?t=4014)
@@ -42,6 +44,7 @@
    8. [`initialState`](https://youtu.be/JMRwkMgaBOg?t=4913)
    9. [`nextState (Start w)`](https://youtu.be/JMRwkMgaBOg?t=4940)
       1. [`tokenCurrencies`, `nftCurrencies`, `tokenNames`, `tokens`, `nftAssets`, `nfts`, `tss`](https://youtu.be/JMRwkMgaBOg?t=5074)
+      2. [`tsModel`](https://youtu.be/JMRwkMgaBOg?t=5194)
    10. [`nextState (SetPrice v w p)`](https://youtu.be/JMRwkMgaBOg?t=5338)
    11. [`nextState (AddTokens v w n)`, `getTSState'`, `getTSState`, `hasStarted`](https://youtu.be/JMRwkMgaBOg?t=5471)
    12. [`nextState (BuyTokens v w n)`](https://youtu.be/JMRwkMgaBOg?t=5887)
