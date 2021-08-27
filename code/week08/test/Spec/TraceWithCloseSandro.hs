@@ -89,8 +89,8 @@ myTrace = do
 
             callEndpoint @"buy tokens" h3 5
             void $ Emulator.waitNSlots 5
-
-            callEndpoint @"withdraw" h1 (40, 10_000_000)
+-- not really needed anymore
+--            callEndpoint @"withdraw" h1 (40, 10_000_000)
             void $ Emulator.waitNSlots 5
 
             callEndpoint @"close contract" h1 ()
