@@ -114,11 +114,7 @@ transition game s r = case (stateValue s, stateData s, r) of
                                                      , State Finished mempty
                                                      )
     _                                        -> Nothing
-
-{-# INLINABLE final #-}
-final :: GameDatum -> Bool
-final Finished = True
-final _        = False
+c
 
 {-# INLINABLE check #-}
 check :: ByteString -> ByteString -> GameDatum -> GameRedeemer -> ScriptContext -> Bool

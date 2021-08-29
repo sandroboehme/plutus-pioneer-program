@@ -12,7 +12,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Spec.Trace
+module Spec.TraceManualRepaymentSandro
     ( tests
     , runMyTrace
     ) where
@@ -32,13 +32,13 @@ import           PlutusTx.Prelude
 import           Prelude                    (IO, String, Show (..))
 import           Test.Tasty
 
-import           Week08.TokenSale
+import           Week08.TokenSaleManualRepayment
 
 tests :: TestTree
 tests = checkPredicateOptions
     (defaultCheckOptions & emulatorConfig .~ emCfg)
     "token sale trace"
-    (     walletFundsChange (Wallet 1) (Ada.lovelaceValueOf   10_000_000  <> assetClassValue token (-60))
+    (     walletFundsChange (Wallet 1) (Ada.lovelaceValueOf   25_000_000  <> assetClassValue token (-25) <> assetClassValue nftToken 1)
      .&&. walletFundsChange (Wallet 2) (Ada.lovelaceValueOf (-20_000_000) <> assetClassValue token   20)
      .&&. walletFundsChange (Wallet 3) (Ada.lovelaceValueOf (- 5_000_000) <> assetClassValue token    5)
     )
@@ -61,6 +61,16 @@ name = "A"
 
 token :: AssetClass
 token = AssetClass (currency, name)
+
+
+nftCurrency :: CurrencySymbol
+nftCurrency = "7add1b147dfd1cbd1cf0bffe05181a940ebaf94cfd7a3405c41e573a"
+
+nftName :: TokenName
+nftName = "0x54aab9c127e8bc29adcc8eab079634d14aa655114c1189665f20318a"
+
+nftToken :: AssetClass
+nftToken = AssetClass (nftCurrency, nftName)
 
 myTrace :: EmulatorTrace ()
 myTrace = do
@@ -90,4 +100,7 @@ myTrace = do
             void $ Emulator.waitNSlots 5
 
             callEndpoint @"withdraw" h1 (40, 10_000_000)
+            void $ Emulator.waitNSlots 5
+
+            callEndpoint @"close contract" h1 ()
             void $ Emulator.waitNSlots 5
