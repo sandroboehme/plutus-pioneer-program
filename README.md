@@ -1,4 +1,4 @@
-# Plutus Pioneer Program
+# Plutus Pioneer Program 2nd iteration
 
 ## Lectures
 
